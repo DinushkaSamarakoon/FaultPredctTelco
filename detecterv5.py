@@ -154,6 +154,19 @@ def predict_future_faults(raw_df):
             (win, g["alarm_clean"].tolist())
         )
 
+    # ---- ENSURE GROUP COLUMNS ARE CLEAN ----
+    for col in ["ne_name", "location_key", "time_window"]:
+        if col in df.columns:
+            # If column accidentally became multi-dimensional
+            if isinstance(df[col], pd.DataFrame):
+                df[col] = df[col].iloc[:, 0]
+
+            # Force string type for grouping safety
+            df[col] = df[col].astype(str)
+        else:
+            raise ValueError(f"Required column '{col}' not found in dataframe.")
+
+
     results = []
 
     for (ne, loc), records in timeline.items():
