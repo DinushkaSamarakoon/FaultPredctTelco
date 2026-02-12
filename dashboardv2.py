@@ -16,8 +16,8 @@ uploaded_file = st.file_uploader(
 
 # ================= EMAIL =================
 def send_email_report(df, receiver_email):
-    sender_email = "telcoalarmpredictorv1@gmail.com"
-    sender_password = "bgdajtjpxuudvnmh"
+    sender_email = "your_email@gmail.com"
+    sender_password = "APP_PASSWORD"
 
     body = "Future Fault Prediction Report\n\n"
 
@@ -212,4 +212,3 @@ if uploaded_file:
     except Exception as e:
         st.error("Error processing file")
         st.exception(e)
-
