@@ -7,13 +7,70 @@ from email.mime.multipart import MIMEMultipart
 import os
 
 from detecterv5 import predict_future_faults
+import base64
+
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+image_base64 = get_base64_image("Background.jpeg")
 
 
 # ------------------------------------------------------------
 # PAGE CONFIG
 # ------------------------------------------------------------
 st.set_page_config(page_title="Future Fault Prediction Dashboard", layout="wide")
-st.title("📡 Future Fault Prediction Dashboard")
+# st.title("📡 Future Fault Prediction Dashboard")
+
+st.markdown(f"""
+<style>
+.hero {{
+    position: relative;
+    background-image: url("data:image/jpeg;base64,{image_base64}");
+    background-size: cover;
+    background-position: center;
+    padding: 60px 30px;
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 30px;
+    overflow: hidden;
+}}
+
+.hero::before {{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+}}
+
+.hero-content {{
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}}
+
+.hero h1 {{
+    font-size: 36px;
+    margin: 0;
+}}
+
+.hero p {{
+    font-size: 18px;
+    margin-top: 10px;
+}}
+</style>
+
+<div class="hero">
+    <div class="hero-content">
+        <h1>📡 Future Fault Prediction Dashboard</h1>
+        <p>AI-Powered Telecom Network Risk Monitoring System</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
 
 
 # ------------------------------------------------------------
@@ -89,8 +146,22 @@ if uploaded_files:
             else:
                 temp_df = pd.read_excel(uploaded_file)
 
-            temp_df["Source File"] = uploaded_file.name
+            # Normalize column names immediately
+            temp_df.columns = (
+                temp_df.columns
+                .astype(str)
+                .str.strip()
+                .str.lower()
+                .str.replace(" ", "_")
+            )
+
+            # Remove duplicate columns in that file
+            temp_df = temp_df.loc[:, ~temp_df.columns.duplicated()]
+
+            temp_df["source_file"] = uploaded_file.name
+
             all_dfs.append(temp_df)
+
 
         except Exception as e:
             st.error(f"Error reading {uploaded_file.name}")
