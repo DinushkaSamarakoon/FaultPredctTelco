@@ -145,6 +145,23 @@ def predict_future_faults(raw_df):
         f"{TIME_WINDOW_MINUTES}min"
     )
 
+    # Remove duplicate columns
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    # Flatten MultiIndex columns if exist
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = [
+            "_".join([str(i) for i in col if str(i) != "nan"])
+            for col in df.columns
+        ]
+
+    # Ensure grouping columns are 1D
+    for col in ["ne_name", "location_key", "time_window"]:
+        if col in df.columns:
+            if isinstance(df[col], pd.DataFrame):
+                df[col] = df[col].iloc[:, 0]
+            df[col] = df[col].astype(str)
+
     # Build timeline
     timeline = defaultdict(list)
     for (ne, loc, win), g in df.groupby(
@@ -153,18 +170,6 @@ def predict_future_faults(raw_df):
         timeline[(ne, loc)].append(
             (win, g["alarm_clean"].tolist())
         )
-
-    # ---- ENSURE GROUP COLUMNS ARE CLEAN ----
-    for col in ["ne_name", "location_key", "time_window"]:
-        if col in df.columns:
-            # If column accidentally became multi-dimensional
-            if isinstance(df[col], pd.DataFrame):
-                df[col] = df[col].iloc[:, 0]
-
-            # Force string type for grouping safety
-            df[col] = df[col].astype(str)
-        else:
-            raise ValueError(f"Required column '{col}' not found in dataframe.")
 
 
     results = []
